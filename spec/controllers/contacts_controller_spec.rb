@@ -90,6 +90,64 @@ RSpec.describe ContactsController, type: :controller do
       end
     end
 
-    context "with invalid attributes"
+    context "with invalid attributes" do
+      it "does not save the contact in the database" do
+        expect {
+          post :create, contact:
+          FactoryGirl.attributes_for(:contact, last_name: nil)
+        }.not_to change(Contact, :count)
+      end
+      it "renders the new template" do
+        post :create, contact:
+        FactoryGirl.attributes_for(:contact, last_name: nil)
+        expect(response).to render_template(:new)
+      end
+    end
+  end
+  describe "PUT #update" do
+    before :each do
+      @contact = create :contact, first_name: "groucho", last_name: "marx"
+    end
+    context "with valid attributes" do
+      it "locates the correct contact" do
+        put :update, id: @contact.id, contact: FactoryGirl.attributes_for(:contact, first_name: "Harpo")
+        expect(assigns[:contact]).to eq(@contact)
+      end
+      it "changes the contacts attributes" do
+        put :update, id: @contact.id, contact: FactoryGirl.attributes_for(:contact, first_name: "Harpo")
+        @contact.reload
+        expect(@contact.first_name).to eq("Harpo")
+      end
+      it "redirects to the contact's show page" do
+        put :update, id: @contact.id, contact: FactoryGirl.attributes_for(:contact, first_name: "Harpo")
+        expect(response).to redirect_to(@contact)
+      end
+    end
+    context "with invalid attributes" do
+      it "does not update the contacts attributes" do
+        put :update, id: @contact.id, contact: FactoryGirl.attributes_for(:contact, first_name: nil)
+        @contact.reload
+        expect(@contact.first_name).to eq("groucho")
+      end
+      it "re-renders the edit template" do
+        put :update, id: @contact.id, contact: FactoryGirl.attributes_for(:contact, first_name: nil)
+        expect(response).to render_template(:edit)
+      end
+    end
+  end
+  describe "DELETE #destroy" do
+    before :each do
+      @contact = create :contact
+    end
+
+    it "deletes the contact from the database" do
+      expect {
+        delete :destroy, id: @contact.id
+      }.to change(Contact, :count).by (-1)
+    end
+    it "redirects to the contact#index page" do
+      delete :destroy, id: @contact.id
+      expect(response).to redirect_to(contacts_path)
+    end
   end
  end
